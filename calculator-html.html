@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compensation Calculator</title>
+    <!-- Include Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bg-yellow-200 {
+            background-color: #fef08a;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen p-4">
+    <div class="w-full max-w-2xl bg-white rounded-lg shadow-lg">
+        <div class="p-4">
+            <div class="space-y-4">
+                <!-- Header Row -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white border p-2 text-base">Select Start Month</div>
+                    <div class="text-right">
+                        <select id="monthSelect" class="w-full text-right bg-yellow-200 p-2 rounded text-base">
+                            <option value="Jan">Jan</option>
+                            <option value="Feb">Feb</option>
+                            <option value="Mar">Mar</option>
+                            <option value="Apr">Apr</option>
+                            <option value="May">May</option>
+                            <option value="Jun">Jun</option>
+                            <option value="Jul">Jul</option>
+                            <option value="Aug">Aug</option>
+                            <option value="Sep">Sep</option>
+                            <option value="Oct">Oct</option>
+                            <option value="Nov">Nov</option>
+                            <option value="Dec">Dec</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Title Selection -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white border p-2 text-base">Select Title</div>
+                    <div class="text-right">
+                        <select id="titleSelect" class="w-full text-right bg-yellow-200 p-2 rounded text-base">
+                            <option value="PC">PC</option>
+                            <option value="SC" selected>SC</option>
+                            <option value="Sr. SC">Sr. SC</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Draw Section -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-2 text-base">Annualized Draw</div>
+                    <div class="flex bg-yellow-200 rounded justify-end">
+                        <span class="p-2 text-base">$</span>
+                        <input type="text" id="annualizedDraw" value="40,000.00"
+                            class="text-right bg-yellow-200 border-0 focus:outline-none text-base w-full p-2"
+                            onchange="updateCalculations()" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-2 text-base">Cal. Yr. Paid Draw</div>
+                    <div id="paidDraw" class="p-2 text-right border bg-gray-50 text-base">$0.00</div>
+                </div>
+
+                <!-- Target Section -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-2 text-base">Annualized Target</div>
+                    <div class="flex bg-yellow-200 rounded justify-end">
+                        <span class="p-2 text-base">$</span>
+                        <input type="text" id="annualizedTarget" value="200,000.00"
+                            class="text-right bg-yellow-200 border-0 focus:outline-none text-base w-full p-2"
+                            onchange="updateCalculations()" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-2 text-base">Cal. Yr. Prorated Target</div>
+                    <div id="proratedTarget" class="p-2 text-right border bg-gray-50 text-base">$0.00</div>
+                </div>
+
+                <!-- Real Time Section -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-2 text-base">Real Time %</div>
+                    <div id="realTime" class="p-2 text-right border bg-gray-50 text-base">0.00%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        function formatNumber(num) {
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function parseFormattedNumber(str) {
+            return Number(str.replace(/[^0-9.-]/g, ''));
+        }
+
+        function getStartMonth1() {
+            const monthIndex = months.indexOf(document.getElementById('monthSelect').value) + 1;
+            return monthIndex === 1 ? 0 : monthIndex - 1;
+        }
+
+        function calculatePaidDraw() {
+            const annualizedDraw = parseFormattedNumber(document.getElementById('annualizedDraw').value);
+            return (annualizedDraw / 12) * getStartMonth1();
+        }
+
+        function calculateProratedTarget() {
+            const annualizedTarget = parseFormattedNumber(document.getElementById('annualizedTarget').value);
+            const monthIndex = months.indexOf(document.getElementById('monthSelect').value);
+            return (annualizedTarget / 12) * (12 - monthIndex);
+        }
+
+        function calculateRealTime() {
+            const title = document.getElementById('titleSelect').value;
+            const baselineTarget = title === 'PC' ? 55000 : 
+                                 title === 'SC' ? 65000 : 
+                                 title === 'Sr. SC' ? 75000 : 0;
+            
+            const annualizedDraw = parseFormattedNumber(document.getElementById('annualizedDraw').value);
+            const annualizedTarget = parseFormattedNumber(document.getElementById('annualizedTarget').value);
+            
+            return ((baselineTarget - annualizedDraw) / annualizedTarget) * 100;
+        }
+
+        function updateCalculations() {
+            // Format input values
+            const drawInput = document.getElementById('annualizedDraw');
+            const targetInput = document.getElementById('annualizedTarget');
+            
+            drawInput.value = formatNumber(parseFormattedNumber(drawInput.value));
+            targetInput.value = formatNumber(parseFormattedNumber(targetInput.value));
+
+            // Update calculated values
+            document.getElementById('paidDraw').textContent = '$' + formatNumber(calculatePaidDraw());
+            document.getElementById('proratedTarget').textContent = '$' + formatNumber(calculateProratedTarget());
+            document.getElementById('realTime').textContent = calculateRealTime().toFixed(2) + '%';
+        }
+
+        // Add event listeners
+        document.getElementById('monthSelect').addEventListener('change', updateCalculations);
+        document.getElementById('titleSelect').addEventListener('change', updateCalculations);
+        document.getElementById('annualizedDraw').addEventListener('change', updateCalculations);
+        document.getElementById('annualizedTarget').addEventListener('change', updateCalculations);
+
+        // Initial calculation
+        updateCalculations();
+    </script>
+</body>
+</html>
